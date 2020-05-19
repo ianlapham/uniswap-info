@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useMemo, useCallback, use
 
 import { client } from '../apollo/client'
 import { PAIR_DATA, PAIR_CHART, All_PAIRS, TOKEN_TXNS } from '../apollo/queries'
+import { useQuery } from '@apollo/react-hooks'
 
 import { useEthPrice } from './GlobalData'
 
@@ -36,13 +37,13 @@ function reducer(state, { type, payload }) {
     case UPDATE: {
       const { data } = payload
       const store = {}
-      Object.keys(data).map(item => {
-        return (store[item] = data[item])
+      Object.keys(data).map(key => {
+        return (store[key] = data[key])
       })
       return {
         ...state,
         [data.id]: {
-          ...(safeAccess(state, [data.id]) || {}),
+          ...state?.data?.id,
           ...store
         }
       }
@@ -140,37 +141,13 @@ const getPairData = async (address, ethPrice) => {
   let oneWeekBlock = await getBlockFromTimestamp(utcOneWeekBack)
 
   try {
-    let result = await client.query({
-      query: PAIR_DATA(address),
-      fetchPolicy: 'cache-first'
-    })
-    data = result.data && result.data.pairs && result.data.pairs[0]
-
-    let oneDayResult = await client.query({
-      query: PAIR_DATA(address, oneDayBlock),
-      fetchPolicy: 'cache-first'
-    })
-    oneDayData = oneDayResult.data.pairs[0]
-
-    let twoDayResult = await client.query({
-      query: PAIR_DATA(address, twoDayBlock),
-      fetchPolicy: 'cache-first'
-    })
-    twoDayData = twoDayResult.data.pairs[0]
-
-    let oneWeekResult = await client.query({
-      query: PAIR_DATA(address, oneWeekBlock),
-      fetchPolicy: 'cache-first'
-    })
-    let oneWeekData = oneWeekResult.data.pairs[0]
-
     const [oneDayVolumeUSD, volumeChangeUSD] = get2DayPercentChange(
       data.volumeUSD,
       oneDayData?.volumeUSD ? oneDayData?.volumeUSD : 0,
       twoDayData?.volumeUSD ? twoDayData?.volumeUSD : 0
     )
 
-    const oneWeekVolumeUSD = parseFloat(oneWeekData ? data?.volumeUSD - oneWeekData?.volumeUSD : data.volumeUSD)
+    const oneWeekVolumeUSD = parseFloat('' ? data?.volumeUSD - {}?.volumeUSD : data.volumeUSD)
 
     const [oneDayVolumeETH, volumeChangeETH] = get2DayPercentChange(
       data.tradeVolumeETH,

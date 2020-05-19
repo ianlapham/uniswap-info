@@ -123,12 +123,10 @@ export const PAIR_TXNS = gql`
   }
 `
 
-export const PAIR_DATA = (pairAddress, block) => {
-  const queryString = block
-    ? `
+export const PAIR_DATA = (pairAddress, oneDayBlock, twoDayBlock, oneWeekBlock) => {
+  const queryString = `
     query pairs {
-      pairs(block: {number: ${block} 
-      } where: { id: "${pairAddress}"} ) {
+      current: pairs(where: { id: "${pairAddress}"} ) {
         id
         txCount
         token0 {
@@ -151,29 +149,18 @@ export const PAIR_DATA = (pairAddress, block) => {
         reserveETH
         volumeUSD
       }
-    }`
-    : ` query pairs {
-      pairs( where: { id: "` +
-      pairAddress +
-      `"}) {
-        id
+      oneDay: pairs(block: {number: ${oneDayBlock}} where: { id: "${pairAddress}"} ) {
         txCount
-        token0 {
-          id
-          symbol
-          name
-          totalLiquidity
-          derivedETH
-        }
-        token1 {
-          id
-          symbol
-          name
-          totalLiquidity
-          derivedETH
-        }
-        reserve0
-        reserve1
+        reserveUSD
+        volumeUSD
+      }
+      twoDays: pairs(block: {number: ${twoDayBlock}} where: { id: "${pairAddress}"} ) {
+        txCount
+        reserveUSD
+        volumeUSD
+      }
+      oneWeek: pairs(block: {number: ${oneWeekBlock}} where: { id: "${pairAddress}"} ) {
+        txCount
         reserveUSD
         volumeUSD
       }
@@ -309,7 +296,7 @@ export const GLOBAL_TXNS = gql`
 
 export const All_PAIRS = gql`
   query pairs {
-    pairs(orderBy: reserveUSD, orderDirection: desc) {
+    pairs(first: 10, orderBy: reserveUSD, orderDirection: desc) {
       id
     }
   }
